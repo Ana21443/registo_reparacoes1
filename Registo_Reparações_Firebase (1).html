@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registo de Reparações</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f4f2ee;
+    --surface: #ffffff;
+    --surface2: #f9f8f5;
+    --border: #e0ddd6;
+    --border2: #cbc8c0;
+    --accent: #1a1a1a;
+    --accent2: #d4380d;
+    --accent-light: #fff1ed;
+    --text: #1a1a1a;
+    --text-muted: #888580;
+    --text-dim: #555250;
+    --green: #237804;
+    --green-bg: #f0fff0;
+    --green-border: #b7eb8f;
+    --tag-bg: #fff7e6;
+    --tag-border: #ffd591;
+    --tag-color: #874d00;
+    --radius: 8px;
+    --radius-sm: 5px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--accent);
+    padding: 22px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .header-logo {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: -0.02em;
+    background: var(--accent2);
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+  }
+  header h1 {
+    font-size: 1rem;
+    font-weight: 500;
+    color: rgba(255,255,255,0.85);
+    letter-spacing: 0.01em;
+  }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .count-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.7);
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+  .count-badge strong { color: #fff; }
+  .sync-indicator {
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.07);
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .sync-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #52c41a; flex-shrink: 0;
+  }
+  .sync-dot.spin { background: #EF9F27; animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* LAYOUT */
+  .layout {
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    gap: 0;
+    min-height: calc(100vh - 66px);
+  }
+
+  /* FORM PANEL */
+  .form-panel {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 32px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    position: sticky;
+    top: 0;
+    height: calc(100vh - 66px);
+    overflow-y: auto;
+  }
+  .panel-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .field label span.req { color: var(--accent2); margin-left: 2px; }
+
+  input[type="text"], select, textarea {
+    width: 100%;
+    padding: 11px 13px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.88rem;
+    color: var(--text);
+    background: var(--surface2);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    -webkit-appearance: none;
+  }
+  input[type="text"]:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(26,26,26,0.07);
+  }
+  input.serial {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  select { cursor: pointer; }
+  textarea { resize: vertical; min-height: 70px; }
+
+  .other-input { display: none; margin-top: 6px; }
+  .other-input.visible { display: block; }
+
+  /* REPS SECTION */
+  .reps-section { display: flex; flex-direction: column; gap: 10px; }
+  .rep-row {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 8px;
+    align-items: start;
+  }
+  .rep-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    width: 28px; height: 38px;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 1px;
+  }
+  .rep-fields { display: flex; flex-direction: column; gap: 5px; }
+
+  .add-rep-btn {
+    display: flex; align-items: center; gap: 6px;
+    background: none; border: 1.5px dashed var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    color: var(--text-muted);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    width: 100%;
+    margin-top: 4px;
+  }
+  .add-rep-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--surface2); }
+
+  /* SUBMIT */
+  .submit-btn {
+    padding: 13px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: all 0.15s;
+    margin-top: auto;
+  }
+  .submit-btn:hover { background: #333; transform: translateY(-1px); box-shadow: var(--shadow); }
+  .submit-btn:active { transform: translateY(0); }
+
+  .clear-btn {
+    padding: 9px;
+    background: none;
+    color: var(--text-muted);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .clear-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  /* SUCCESS FLASH */
+  .flash {
+    display: none;
+    padding: 10px 14px;
+    background: var(--green-bg);
+    border: 1.5px solid var(--green-border);
+    border-radius: var(--radius-sm);
+    font-size: 0.82rem;
+    color: var(--green);
+    font-weight: 500;
+  }
+  .flash.show { display: block; animation: flashIn 0.25s ease; }
+  @keyframes flashIn { from { opacity:0; transform: translateY(4px); } to { opacity:1; transform: translateY(0); } }
+
+  /* RIGHT PANEL */
+  .list-panel {
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .list-header h2 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+  }
+  .list-actions { display: flex; gap: 8px; }
+  .btn-export {
+    padding: 8px 16px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text);
+    transition: all 0.15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn-export:hover { border-color: var(--accent); background: var(--accent); color: #fff; }
+  .btn-export.danger:hover { border-color: var(--accent2); background: var(--accent2); color: #fff; }
+
+  /* SEARCH */
+  .search-bar { position: relative; }
+  .search-bar input { padding-left: 36px; background: var(--surface); }
+  .search-bar .ico {
+    position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+    font-size: 0.9rem; color: var(--text-muted); pointer-events: none;
+  }
+
+  /* EMPTY STATE */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 80px 40px;
+    text-align: center;
+    color: var(--text-muted);
+  }
+  .empty-state .icon { font-size: 3rem; opacity: 0.4; }
+  .empty-state p { font-size: 0.88rem; max-width: 280px; line-height: 1.6; }
+
+  /* RECORDS TABLE */
+  .records-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    min-width: 600px;
+    box-shadow: var(--shadow);
+  }
+  thead tr { background: var(--surface2); }
+  th {
+    padding: 11px 16px;
+    text-align: left;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+  tbody tr.hidden { display: none; }
+  td {
+    padding: 12px 16px;
+    font-size: 0.84rem;
+    vertical-align: middle;
+  }
+  td.serial-cell {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    font-size: 0.88rem;
+    letter-spacing: 0.04em;
+  }
+  td.time-cell {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  /* DEFEITO BADGE */
+  .def-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    color: var(--text-dim);
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* REP TAGS */
+  .rep-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+  .rep-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 0.74rem;
+    font-weight: 500;
+    background: var(--tag-bg);
+    border: 1px solid var(--tag-border);
+    color: var(--tag-color);
+    white-space: nowrap;
+  }
+  .rep-tag.custom {
+    background: var(--accent-light);
+    border-color: #ffbb96;
+    color: #ad2102;
+  }
+
+  /* DELETE BTN */
+  .del-btn {
+    background: none; border: none;
+    color: var(--border2); cursor: pointer;
+    font-size: 1rem; padding: 4px 6px;
+    border-radius: var(--radius-sm);
+    transition: all 0.12s;
+    line-height: 1;
+  }
+  .del-btn:hover { color: var(--accent2); background: #fff1ed; }
+
+  /* NOTES cell */
+  .notes-cell {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-style: italic;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .form-panel { position: static; height: auto; }
+    header, .form-panel, .list-panel { padding-left: 16px; padding-right: 16px; }
+  }
+
+  @media print {
+    header, .form-panel, .list-actions, .del-btn, .search-bar { display: none !important; }
+    .layout { grid-template-columns: 1fr; }
+    body { background: white; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="header-logo">REP</div>
+    <h1>Registo de Reparações</h1>
+  </div>
+  <div class="header-right">
+    <div class="count-badge">Total: <strong id="totalCount">0</strong></div>
+    <div class="sync-indicator">
+      <div class="sync-dot" id="syncDot"></div>
+      <span id="syncLabel">A ligar...</span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- FORM -->
+  <div class="form-panel">
+    <div class="panel-title">📋 Novo Registo</div>
+
+    <div class="field">
+      <label>Número de Série <span class="req">*</span></label>
+      <input type="text" class="serial" id="serial" placeholder="ex: SN-0001234" autocomplete="off" />
+    </div>
+
+    <div class="field">
+      <label>Defeito <span class="req">*</span></label>
+      <select id="defeito" onchange="handleDefeitoChange()">
+        <option value="">— Selecionar defeito —</option>
+        <optgroup label="Sensor">
+          <option>Sujidade do Sensor</option>
+          <option>Sujidades</option>
+        </optgroup>
+        <optgroup label="Função">
+          <option>Sem Função Geral</option>
+          <option>Sem Função Teclas</option>
+          <option>Não Faz Medição a Laser</option>
+          <option>Erro de Função USB</option>
+          <option>Não Assume SNUC</option>
+          <option>Não Assume Cores</option>
+          <option>Erro de Função Display / Não Desliga</option>
+          <option>Desliga sem Cabo</option>
+          <option>Funções</option>
+        </optgroup>
+        <optgroup label="Imagem">
+          <option>Qualidade de Imagem Geral</option>
+          <option>Qualidade de Imagem Stripes</option>
+          <option>Qualidade de Imagem Gain Curtain</option>
+          <option>Má Imagem</option>
+          <option>Manchas</option>
+          <option>Linhas Brilhantes</option>
+          <option>Linhas</option>
+          <option>Focagem</option>
+          <option>Defeito de Ajuste</option>
+        </optgroup>
+        <optgroup label="Movimento">
+          <option>Movimento Geral</option>
+          <option>Mov. Objetiva</option>
+          <option>Movimento Ocular</option>
+        </optgroup>
+        <optgroup label="Eletrónico">
+          <option>Não Liga</option>
+          <option>Luz Azul / Não Liga Luz Azul</option>
+          <option>Eletrónico Geral</option>
+          <option>Eletrónico Sensor Luz Azul</option>
+        </optgroup>
+        <optgroup label="Conectividade">
+          <option>Conexão Com A App</option>
+          <option>Erro: WiFi</option>
+          <option>Erro: USB</option>
+        </optgroup>
+        <optgroup label="Danos">
+          <option>Danos</option>
+          <option>Tratamento de Superfície</option>
+        </optgroup>
+        <option value="__outro__">✏️ Outro (escrever)</option>
+      </select>
+      <input type="text" class="other-input" id="defeitoOutro" placeholder="Descrever o defeito..." />
+    </div>
+
+    <div class="field">
+      <label>Reparações</label>
+      <div class="reps-section" id="repsSection"></div>
+      <button class="add-rep-btn" onclick="addRepRow()">+ Adicionar reparação</button>
+    </div>
+
+    <div class="field">
+      <label>Notas (opcional)</label>
+      <textarea id="notas" placeholder="Observações adicionais..."></textarea>
+    </div>
+
+    <div class="flash" id="flash">✓ Registo adicionado com sucesso!</div>
+
+    <button class="submit-btn" onclick="submeter()">Registar Reparação</button>
+    <button class="clear-btn" onclick="limparForm()">Limpar formulário</button>
+  </div>
+
+  <!-- LIST -->
+  <div class="list-panel">
+    <div class="list-header">
+      <h2>Registos</h2>
+      <div class="list-actions">
+        <button class="btn-export danger" onclick="limparTodos()" title="Apagar todos os registos">🗑 Limpar tudo</button>
+        <button class="btn-export" onclick="exportarCSV()">⬇ Exportar CSV</button>
+      </div>
+    </div>
+
+    <div class="search-bar">
+      <span class="ico">🔍</span>
+      <input type="text" id="searchInput" placeholder="Pesquisar por número de série ou defeito..." oninput="filtrar()" />
+    </div>
+
+    <div id="emptyState" class="empty-state">
+      <div class="icon">📭</div>
+      <p>Ainda não há registos. Preenche o formulário à esquerda para começar.</p>
+    </div>
+
+    <div class="records-wrap" id="recordsWrap" style="display:none">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Hora</th>
+            <th>Nº Série</th>
+            <th>Defeito</th>
+            <th>Reparações</th>
+            <th>Notas</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// ╔══════════════════════════════════════════════════╗
+// ║  SUBSTITUI ESTES VALORES PELO TEU firebaseConfig ║
+// ╚══════════════════════════════════════════════════╝
+const firebaseConfig = {
+  apiKey: "AIzaSyCTMA_ElMpWV3UV0YZmnSBkTBNaKb_J1u0",
+  authDomain: "registo-reparacoes.firebaseapp.com",
+  projectId: "registo-reparacoes",
+  storageBucket: "registo-reparacoes.firebasestorage.app",
+  messagingSenderId: "649559331217",
+  appId: "1:649559331217:web:23a698552d768f294b0a30"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const docRef = doc(db, 'reparacoes', 'registos');
+
+let registos = [];
+let repCount = 0;
+
+const REPARACOES_LISTA = [
+  "Sensor", "Anilha", "O-Ring", "Laser", "E-stack",
+  "Fita ON/OFF", "USB", "Reprocesso", "Bateria",
+  "Antena", "Ocular", "Objetiva", "Ajuste",
+  "Tratamento de Superfície"
+];
+
+// ── Sync status ────────────────────────────────────
+function setSyn(v) {
+  const dot = document.getElementById('syncDot');
+  const lbl = document.getElementById('syncLabel');
+  dot.className = 'sync-dot' + (v ? ' spin' : '');
+  lbl.textContent = v ? 'A guardar...' : 'Sincronizado';
+}
+
+// ── Guardar no Firebase ────────────────────────────
+async function salvar() {
+  setSyn(true);
+  try {
+    await setDoc(docRef, { lista: registos });
+  } catch(e) {
+    console.error('Erro ao guardar:', e);
+    document.getElementById('syncLabel').textContent = 'Erro de ligação';
+  }
+  setSyn(false);
+}
+
+// ── Listener em tempo real ─────────────────────────
+// Atualiza automaticamente em todos os PCs sem recarregar
+onSnapshot(docRef, snap => {
+  if (snap.exists() && snap.data().lista) {
+    registos = snap.data().lista;
+    renderTabela();
+    const now = new Date();
+    document.getElementById('syncLabel').textContent =
+      'Atualizado às ' + now.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  } else {
+    registos = [];
+    renderTabela();
+    document.getElementById('syncLabel').textContent = 'Sincronizado';
+  }
+});
+
+// ── Rep Rows ───────────────────────────────────────
+function addRepRow() {
+  repCount++;
+  const id = repCount;
+  const section = document.getElementById('repsSection');
+  const row = document.createElement('div');
+  row.className = 'rep-row';
+  row.id = `repRow-${id}`;
+  row.innerHTML = `
+    <div class="rep-num">${id}</div>
+    <div class="rep-fields">
+      <select id="rep-${id}" onchange="handleRepChange(${id})">
+        <option value="">— Selecionar —</option>
+        ${REPARACOES_LISTA.map(r => `<option>${r}</option>`).join('')}
+        <option value="__outro__">✏️ Outro (escrever)</option>
+      </select>
+      <input type="text" class="other-input" id="repOutro-${id}" placeholder="Descrever a reparação..." />
+    </div>
+  `;
+  section.appendChild(row);
+}
+window.addRepRow = addRepRow;
+
+function handleRepChange(id) {
+  const sel = document.getElementById(`rep-${id}`);
+  const inp = document.getElementById(`repOutro-${id}`);
+  inp.classList.toggle('visible', sel.value === '__outro__');
+}
+window.handleRepChange = handleRepChange;
+
+function handleDefeitoChange() {
+  const sel = document.getElementById('defeito');
+  const inp = document.getElementById('defeitoOutro');
+  inp.classList.toggle('visible', sel.value === '__outro__');
+}
+window.handleDefeitoChange = handleDefeitoChange;
+
+// ── Submit ─────────────────────────────────────────
+async function submeter() {
+  const serial = document.getElementById('serial').value.trim().toUpperCase();
+  if (!serial) { alert('Por favor insere o número de série.'); return; }
+
+  const defSel = document.getElementById('defeito').value;
+  if (!defSel) { alert('Por favor seleciona um defeito.'); return; }
+  const defeito = defSel === '__outro__'
+    ? document.getElementById('defeitoOutro').value.trim()
+    : defSel;
+  if (!defeito) { alert('Por favor descreve o defeito.'); return; }
+
+  const reps = [];
+  for (let i = 1; i <= repCount; i++) {
+    const el = document.getElementById(`rep-${i}`);
+    if (!el) continue;
+    let val = el.value;
+    if (val === '__outro__') val = document.getElementById(`repOutro-${i}`).value.trim();
+    if (val) reps.push({ val, isCustom: el.value === '__outro__' });
+  }
+
+  const notas = document.getElementById('notas').value.trim();
+
+  const registo = {
+    id: Date.now(),
+    hora: new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' }),
+    data: new Date().toLocaleDateString('pt-PT'),
+    serial, defeito,
+    defeitoIsCustom: defSel === '__outro__',
+    reps, notas
+  };
+
+  registos.unshift(registo);
+  await salvar();
+  mostrarFlash();
+  limparForm();
+}
+window.submeter = submeter;
+
+// ── Flash ──────────────────────────────────────────
+function mostrarFlash() {
+  const f = document.getElementById('flash');
+  f.classList.add('show');
+  setTimeout(() => f.classList.remove('show'), 2500);
+}
+
+// ── Clear ──────────────────────────────────────────
+function limparForm() {
+  document.getElementById('serial').value = '';
+  document.getElementById('defeito').value = '';
+  document.getElementById('defeitoOutro').value = '';
+  document.getElementById('defeitoOutro').classList.remove('visible');
+  document.getElementById('notas').value = '';
+  document.getElementById('repsSection').innerHTML = '';
+  repCount = 0;
+  addRepRow();
+}
+window.limparForm = limparForm;
+
+async function limparTodos() {
+  if (!registos.length) return;
+  if (!confirm('Tens a certeza que queres apagar TODOS os registos? Esta ação não pode ser revertida.')) return;
+  registos = [];
+  await salvar();
+}
+window.limparTodos = limparTodos;
+
+// ── Render ─────────────────────────────────────────
+function renderTabela() {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+  const empty = document.getElementById('emptyState');
+  const wrap = document.getElementById('recordsWrap');
+  document.getElementById('totalCount').textContent = registos.length;
+
+  if (!registos.length) {
+    empty.style.display = 'flex';
+    wrap.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  wrap.style.display = 'block';
+
+  registos.forEach((r, idx) => {
+    const tr = document.createElement('tr');
+    tr.dataset.search = `${r.serial} ${r.defeito}`.toLowerCase();
+
+    const repTagsHtml = r.reps && r.reps.length
+      ? r.reps.map(rp => `<span class="rep-tag${rp.isCustom ? ' custom' : ''}">${esc(rp.val)}</span>`).join('')
+      : '<span style="color:#bbb;font-size:.75rem">—</span>';
+
+    tr.innerHTML = `
+      <td style="color:var(--text-muted);font-family:'IBM Plex Mono',monospace;font-size:.75rem">${registos.length - idx}</td>
+      <td class="time-cell">${esc(r.data)}<br>${esc(r.hora)}</td>
+      <td class="serial-cell">${esc(r.serial)}</td>
+      <td><span class="def-badge" title="${esc(r.defeito)}">${esc(r.defeito)}</span></td>
+      <td><div class="rep-tags">${repTagsHtml}</div></td>
+      <td class="notes-cell" title="${esc(r.notas || '')}">${esc(r.notas) || '—'}</td>
+      <td><button class="del-btn" data-id="${r.id}" title="Apagar">✕</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  tbody.querySelectorAll('.del-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      apagar(parseInt(this.getAttribute('data-id'), 10));
+    });
+  });
+
+  filtrar();
+}
+
+function esc(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Filter ─────────────────────────────────────────
+function filtrar() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  document.querySelectorAll('#tableBody tr').forEach(tr => {
+    tr.classList.toggle('hidden', !!q && !tr.dataset.search.includes(q));
+  });
+}
+window.filtrar = filtrar;
+
+// ── Delete ─────────────────────────────────────────
+async function apagar(id) {
+  if (!confirm('Tens a certeza que queres apagar este registo?')) return;
+  registos = registos.filter(r => r.id !== id);
+  await salvar();
+}
+
+// ── Export CSV ─────────────────────────────────────
+function exportarCSV() {
+  if (!registos.length) { alert('Não há registos para exportar.'); return; }
+  const maxReps = Math.max(...registos.map(r => (r.reps||[]).length), 1);
+  let header = ['Nº', 'Data', 'Hora', 'Nº Série', 'Defeito'];
+  for (let i = 1; i <= maxReps; i++) header.push(`Reparação ${i}`);
+  header.push('Notas');
+
+  const rows = registos.map((r, idx) => {
+    const repVals = (r.reps||[]).map(rp => rp.val);
+    while (repVals.length < maxReps) repVals.push('');
+    return [
+      registos.length - idx,
+      r.data, r.hora,
+      r.serial, r.defeito,
+      ...repVals,
+      r.notas || ''
+    ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(',');
+  });
+
+  const csv = [header.map(h => `"${h}"`).join(','), ...rows].join('\n');
+  const bom = '\uFEFF';
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const today = new Date().toISOString().slice(0,10);
+  a.href = url; a.download = `reparacoes_${today}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+}
+window.exportarCSV = exportarCSV;
+
+// ── Init ───────────────────────────────────────────
+addRepRow();
+document.getElementById('serial').focus();
+</script>
+</body>
+</html>
